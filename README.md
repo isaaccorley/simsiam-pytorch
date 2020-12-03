@@ -6,6 +6,8 @@ Minimal PyTorch Implementation of SimSiam from ["Exploring Simple Siamese Repres
 
 ### Train on STL-10 dataset
 
+Modify config.yaml to your liking and run
+
 ```python
 python train.py
 
