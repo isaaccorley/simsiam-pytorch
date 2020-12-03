@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
 import kornia
 import torch
@@ -20,14 +20,12 @@ class RandomGaussianBlur2D(kornia.augmentation.AugmentationBase2D):
         border_type: str = "reflect",
         return_transform: bool = False,
         same_on_batch: bool = False,
-        p: float = 0.1,
-        keepdim: bool = False
+        p: float = 0.1
     ) -> None:
         super(RandomGaussianBlur2D, self).__init__(
             p=p,
             return_transform=return_transform,
-            same_on_batch=same_on_batch,
-            keepdim=keepdim
+            same_on_batch=same_on_batch
         )
 
         self.kernel_size = kernel_size
@@ -66,7 +64,7 @@ def augment_transforms(
             hue=0.8*2,
             p=0.8
         ),
-        kornia.augmentations.RandomGrayscale(p=0.2),
+        kornia.augmentation.RandomGrayscale(p=0.2),
         RandomGaussianBlur2D(
             kernel_size=(3, 3),
             sigma=(1.5, 1.5),

@@ -1,5 +1,6 @@
 import os
 import multiprocessing as mp
+from datetime import datetime
 
 import hydra
 import torch
@@ -16,7 +17,8 @@ from simsiam.losses import simsiam_loss
 @hydra.main(config_name="config")
 def main(cfg: DictConfig) -> None:
 
-    print(dict(cfg))
+    cfg.data.path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
+    cfg.train.log_dir = os.path.join(hydra.utils.get_original_cwd(), cfg.train.log_dir)
 
     model = SimSiam(
         backbone=cfg.model.backbone,
@@ -55,7 +57,8 @@ def main(cfg: DictConfig) -> None:
         device=cfg.device
     )
 
-    writer = SummaryWriter()
+    log_dir = os.path.join(cfg.train.log_dir, datetime.now().strftime('%b%d_%H-%M-%S'))
+    writer = SummaryWriter(log_dir=log_dir)
 
     n_iter = 0
     for epoch in range(cfg.train.epochs):

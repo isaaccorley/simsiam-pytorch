@@ -16,7 +16,7 @@ class SimSiam(nn.Module):
         super().__init__()
 
         # Encoder network
-        resnet = getattr(backbone, torchvision.models)(pretrained=pretrained)
+        resnet = getattr(torchvision.models, backbone)(pretrained=pretrained)
         embedding_dim = latent_dim = resnet.fc.in_features
         self.encoder = nn.Sequential(*list(resnet.children())[:-1])
 

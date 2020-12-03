@@ -3,4 +3,5 @@
 __pycache__/
 runs/
 data/
+outputs/
 *.pyc
