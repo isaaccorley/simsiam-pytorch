@@ -9,12 +9,12 @@ from tqdm import tqdm
 from omegaconf import DictConfig
 from torch.utils.tensorboard import SummaryWriter
 
-from simsiam.transforms import load_transforms, augment_transforms
 from simsiam.models import SimSiam
-from simsiam.losses import simsiam_loss
+from simsiam.losses import negative_cosine_similarity
+from simsiam.transforms import load_transforms, augment_transforms
 
 
-@hydra.main(config_name="config")
+@hydra.main(config_name="configs/config")
 def main(cfg: DictConfig) -> None:
 
     cfg.data.path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
@@ -22,7 +22,9 @@ def main(cfg: DictConfig) -> None:
 
     model = SimSiam(
         backbone=cfg.model.backbone,
-        hidden_dim=cfg.model.hidden_dim,
+        latent_dim=cfg.model.latent_dim,
+        proj_hidden_dim=cfg.model.proj_hidden_dim,
+        pred_hidden_dim=cfg.model.pred_hidden_dim,
         pretrained=cfg.model.pretrained,
         device=cfg.device
     )
@@ -52,12 +54,14 @@ def main(cfg: DictConfig) -> None:
     )
 
     transforms = augment_transforms(
-        s=cfg.data.s,
         input_shape=cfg.data.input_shape,
         device=cfg.device
     )
 
-    log_dir = os.path.join(cfg.train.log_dir, datetime.now().strftime('%b%d_%H-%M-%S'))
+    log_dir = os.path.join(
+        cfg.train.log_dir,
+        "pretrain_" + datetime.now().strftime('%b%d_%H-%M-%S')
+    )
     writer = SummaryWriter(log_dir=log_dir)
 
     n_iter = 0
@@ -74,13 +78,18 @@ def main(cfg: DictConfig) -> None:
             x1, x2 = transforms(x), transforms(x)
 
             # encode
-            z1, z2 = model.encode(x1), model.encode(x2)
-            
+            e1, e2 = model.encode(x1), model.encode(x2)
+
             # project
+            z1, z2 = model.project(e1), model.project(e2)
+
+            # predict
             p1, p2 = model.project(z1), model.project(z2)
 
             # compute loss
-            loss = simsiam_loss(z1, z2, p1, p2)
+            loss1 = negative_cosine_similarity(p1, z1)
+            loss2 = negative_cosine_similarity(p2, z2)
+            loss = loss1/2 + loss2/2
             loss.backward()
             opt.step()
 

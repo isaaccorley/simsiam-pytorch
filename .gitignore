@@ -1,7 +1,7 @@
 .vscode/
 .mypy_cache/
 __pycache__/
-runs/
+logs/
 data/
 outputs/
 *.pyc

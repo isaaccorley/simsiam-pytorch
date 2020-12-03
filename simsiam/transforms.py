@@ -51,28 +51,27 @@ class RandomGaussianBlur2D(kornia.augmentation.AugmentationBase2D):
 
 
 def augment_transforms(
-    s: float,
     input_shape: Tuple[int, int],
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
 ) -> nn.Sequential:
 
     augs = nn.Sequential(
         kornia.augmentation.ColorJitter(
-            brightness=0.8*s,
-            contrast=0.8*s,
-            saturation=0.8*s,
-            hue=0.8*2,
+            brightness=0.4,
+            contrast=0.4,
+            saturation=0.4,
+            hue=0.1,
             p=0.8
         ),
         kornia.augmentation.RandomGrayscale(p=0.2),
         RandomGaussianBlur2D(
             kernel_size=(3, 3),
-            sigma=(1.5, 1.5),
+            sigma=(0.1, 2.0),
             p=0.5
         ),
         kornia.augmentation.RandomResizedCrop(
             size=input_shape,
-            scale=(0.08, 1.0),
+            scale=(0.2, 1.0),
             ratio=(0.75, 1.33),
             interpolation="bilinear",
             p=1.0
@@ -86,7 +85,15 @@ def augment_transforms(
     augs = augs.to(device)
     return augs
 
+
 def load_transforms(input_shape: Tuple[int, int]) -> T.Compose:
+    return T.Compose([
+        T.Resize(size=input_shape, interpolation=Image.BILINEAR),
+        T.ToTensor(),
+    ])
+
+
+def test_transforms(input_shape: Tuple[int, int]) -> T.Compose:
     return T.Compose([
         T.Resize(size=input_shape, interpolation=Image.BILINEAR),
         T.ToTensor(),

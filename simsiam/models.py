@@ -7,8 +7,10 @@ class SimSiam(nn.Module):
 
     def __init__(
         self,
-        backbone: str = "resnet18",
-        hidden_dim: int = 512,
+        backbone: str,
+        latent_dim: int,
+        proj_hidden_dim: int,
+        pred_hidden_dim: int,
         pretrained: bool = False,
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ) -> None:
@@ -17,15 +19,27 @@ class SimSiam(nn.Module):
 
         # Encoder network
         resnet = getattr(torchvision.models, backbone)(pretrained=pretrained)
-        embedding_dim = latent_dim = resnet.fc.in_features
+        emb_dim = resnet.fc.in_features
         self.encoder = nn.Sequential(*list(resnet.children())[:-1])
 
-        # Predictor (mlp) network
-        self.predictor = nn.Sequential(
-            nn.Linear(embedding_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
+        # Projection (mlp) network
+        self.projection_mlp = nn.Sequential(
+            nn.Linear(emb_dim, proj_hidden_dim),
+            nn.BatchNorm1d(proj_hidden_dim),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_dim, latent_dim)
+            nn.Linear(proj_hidden_dim, proj_hidden_dim),
+            nn.BatchNorm1d(proj_hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(proj_hidden_dim, latent_dim),
+            nn.BatchNorm1d(latent_dim),
+        )
+
+        # Predictor network (h)
+        self.predictor_mlp = nn.Sequential(
+            nn.Linear(latent_dim, pred_hidden_dim),
+            nn.BatchNorm1d(pred_hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(pred_hidden_dim, latent_dim)
         )
 
         self.to(device)
@@ -33,5 +47,8 @@ class SimSiam(nn.Module):
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x).squeeze()
 
-    def project(self, z: torch.Tensor) -> torch.Tensor:
-        return self.predictor(z)
+    def project(self, e: torch.Tensor) -> torch.Tensor:
+        return self.projection_mlp(e)
+
+    def predict(self, z: torch.Tensor) -> torch.Tensor:
+        return self.predictor_mlp(z)
