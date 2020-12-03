@@ -14,7 +14,7 @@ from simsiam.losses import negative_cosine_similarity
 from simsiam.transforms import load_transforms, augment_transforms
 
 
-@hydra.main(config_name="configs/config")
+@hydra.main(config_name="configs/pretrain")
 def main(cfg: DictConfig) -> None:
 
     cfg.data.path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
