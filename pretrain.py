@@ -84,7 +84,7 @@ def main(cfg: DictConfig) -> None:
             z1, z2 = model.project(e1), model.project(e2)
 
             # predict
-            p1, p2 = model.project(z1), model.project(z2)
+            p1, p2 = model.predict(z1), model.predict(z2)
 
             # compute loss
             loss1 = negative_cosine_similarity(p1, z1)

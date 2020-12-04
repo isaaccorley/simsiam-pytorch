@@ -29,7 +29,7 @@ for epoch in range(epochs):
         x1, x2 = transforms(x), transforms(x)           # Augment
         e1, e2 = model.encode(x1), model.encode(x2)     # Encode
         z1, z2 = model.project(e1), model.project(e2)   # Project
-        p1, p2 = model.project(z1), model.project(z2)   # Predict
+        p1, p2 = model.predict(z1), model.predict(z2)   # Predict
 
         # Compute loss
         loss1 = negative_cosine_similarity(p1, z1)
