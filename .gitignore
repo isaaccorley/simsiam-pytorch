@@ -4,4 +4,5 @@ __pycache__/
 logs/
 data/
 outputs/
+models/
 *.pyc
