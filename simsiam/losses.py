@@ -8,5 +8,3 @@ def negative_cosine_similarity(
 ) -> torch.Tensor:
     """ D(p, z) = -(p*z).sum(dim=1).mean() """
     return - F.cosine_similarity(p, z.detach(), dim=-1).mean()
-
-
