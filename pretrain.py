@@ -45,7 +45,7 @@ def main(cfg: SimpleNamespace) -> None:
         shuffle=True,
         drop_last=True,
         pin_memory=True,
-        num_workers=torch.multiprocessing.mp.cpu_count()
+        num_workers=torch.multiprocessing.cpu_count()
     )
 
     transforms = augment_transforms(
@@ -98,10 +98,10 @@ def main(cfg: SimpleNamespace) -> None:
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, help="Path to config json file")
+    parser.add_argument("--cfg", type=str, required=True, help="Path to config json file")
     args = parser.parse_args()
 
-    with open(args.config, "r") as f:
+    with open(args.cfg, "r") as f:
         cfg = json.loads(f.read(), object_hook=lambda d: SimpleNamespace(**d))
 
     main(cfg)

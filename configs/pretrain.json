@@ -18,5 +18,5 @@
     "weight_decay": 0.0001,
     "log_interval": 100
   },
-  "device": "cuda",
+  "device": "cuda"
 }
