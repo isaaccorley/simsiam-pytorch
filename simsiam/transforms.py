@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as T
 from PIL import Image
+from torchvision.transforms.transforms import RandomHorizontalFlip
 
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)

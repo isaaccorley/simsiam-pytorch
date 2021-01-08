@@ -1,12 +1,11 @@
 import os
-import multiprocessing as mp
-from datetime import datetime
+import json
+import argparse
+from types import SimpleNamespace
 
-import hydra
 import torch
 import torchvision
 from tqdm import tqdm
-from omegaconf import DictConfig
 from torch.utils.tensorboard import SummaryWriter
 
 from simsiam.models import SimSiam
@@ -14,11 +13,7 @@ from simsiam.losses import negative_cosine_similarity
 from simsiam.transforms import load_transforms, augment_transforms
 
 
-@hydra.main(config_name="configs/pretrain")
-def main(cfg: DictConfig) -> None:
-
-    cfg.data.path = os.path.join(hydra.utils.get_original_cwd(), cfg.data.path)
-    cfg.train.log_dir = os.path.join(hydra.utils.get_original_cwd(), cfg.train.log_dir)
+def main(cfg: SimpleNamespace) -> None:
 
     model = SimSiam(
         backbone=cfg.model.backbone,
@@ -50,7 +45,7 @@ def main(cfg: DictConfig) -> None:
         shuffle=True,
         drop_last=True,
         pin_memory=True,
-        num_workers=mp.cpu_count()
+        num_workers=torch.multiprocessing.mp.cpu_count()
     )
 
     transforms = augment_transforms(
@@ -58,11 +53,7 @@ def main(cfg: DictConfig) -> None:
         device=cfg.device
     )
 
-    log_dir = os.path.join(
-        cfg.train.log_dir,
-        "pretrain_" + datetime.now().strftime('%b%d_%H-%M-%S')
-    )
-    writer = SummaryWriter(log_dir=log_dir)
+    writer = SummaryWriter()
 
     n_iter = 0
     for epoch in range(cfg.train.epochs):
@@ -105,4 +96,12 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, help="Path to config json file")
+    args = parser.parse_args()
+
+    with open(args.config, "r") as f:
+        cfg = json.loads(f.read(), object_hook=lambda d: SimpleNamespace(**d))
+
+    main(cfg)
