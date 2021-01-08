@@ -1,6 +1,5 @@
 tqdm
 Pillow
-hydra-core
 torch
 torchvision
 kornia
