@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import torch
 import torchvision
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 from simsiam.models import SimSiam
@@ -57,7 +57,7 @@ def main(cfg: SimpleNamespace) -> None:
     n_iter = 0
     for epoch in range(cfg.train.epochs):
 
-        pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+        pbar = tqdm(enumerate(dataloader), total=len(dataloader), position=0, leave=False)
         for batch, (x, y) in pbar:
 
             opt.zero_grad()
