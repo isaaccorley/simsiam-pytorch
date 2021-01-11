@@ -8,21 +8,23 @@ import torchvision
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-from simsiam.models import SimSiam
-from simsiam.losses import negative_cosine_similarity
+from simsiam.models import ResNet, LinearClassifier
 from simsiam.transforms import load_transforms, augment_transforms
 
 
 def main(cfg: SimpleNamespace) -> None:
 
-    model = SimSiam(
+    model = ResNet(
         backbone=cfg.model.backbone,
-        latent_dim=cfg.model.latent_dim,
-        proj_hidden_dim=cfg.model.proj_hidden_dim,
-        pred_hidden_dim=cfg.model.pred_hidden_dim
+        num_classes=cfg.data.num_classes,
+        pretrained=False,
+        freeze=cfg.model.freeze
     )
+
+    if cfg.model.weights_path:
+        model.encoder.load_state_dict(torch.load(cfg.model.weights_path))
+
     model = model.to(cfg.device)
-    model.train()
 
     opt = torch.optim.SGD(
         params=model.parameters(),
@@ -30,6 +32,7 @@ def main(cfg: SimpleNamespace) -> None:
         momentum=cfg.train.momentum,
         weight_decay=cfg.train.weight_decay
     )
+    loss_func = torch.nn.CrossEntropyLoss()
 
     dataset = torchvision.datasets.STL10(
         root=cfg.data.path,
@@ -62,24 +65,10 @@ def main(cfg: SimpleNamespace) -> None:
 
             opt.zero_grad()
 
-            x = x.to(cfg.device)
-
-            # augment
-            x1, x2 = transforms(x), transforms(x)
-
-            # encode
-            e1, e2 = model.encode(x1), model.encode(x2)
-
-            # project
-            z1, z2 = model.project(e1), model.project(e2)
-
-            # predict
-            p1, p2 = model.predict(z1), model.predict(z2)
-
-            # compute loss
-            loss1 = negative_cosine_similarity(p1, z1)
-            loss2 = negative_cosine_similarity(p2, z2)
-            loss = loss1/2 + loss2/2
+            x, y = x.to(cfg.device), y.to(cfg.device)
+            x = transforms(x)
+            y_pred = model(x)
+            loss = loss_func(y_pred, y)
             loss.backward()
             opt.step()
 
@@ -91,7 +80,7 @@ def main(cfg: SimpleNamespace) -> None:
             n_iter += 1
 
         # save checkpoint
-        torch.save(model.encoder.state_dict(), os.path.join(writer.log_dir, cfg.model.name + ".pt"))
+        torch.save(model.state_dict(), os.path.join(writer.log_dir, cfg.model.name + ".pt"))
 
 
 if __name__ == "__main__":

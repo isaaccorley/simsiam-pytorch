@@ -1,10 +1,9 @@
 {
     "model": {
-        "name": "pretrained",
+        "name": "baseline",
         "backbone": "resnet50",
-        "latent_dim": 2048,
-        "proj_hidden_dim": 2048,
-        "pred_hidden_dim": 512
+        "freeze": false,
+        "weights_path": ""
     },
     "data": {
         "path": "data/",
@@ -17,7 +16,7 @@
     "train": {
         "epochs": 100,
         "batch_size": 128,
-        "lr": 0.05,
+        "lr": 3E-4,
         "momentum": 0.9,
         "weight_decay": 0.0001,
         "log_interval": 100

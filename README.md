@@ -7,7 +7,7 @@ Minimal PyTorch Implementation of SimSiam from ["Exploring Simple Siamese Repres
 ### Load and train on a custom dataset
 
 ```python
-from simsiam import SimSiam
+from simsiam.models import SimSiam
 from simsiam.losses import negative_cosine_similarity
 
 model = SimSiam(
@@ -15,8 +15,9 @@ model = SimSiam(
     latent_dim=2048,        # predictor network output size
     proj_hidden_dim=2048    # projection mlp hidden layer size
     pred_hidden_dim=512     # predictor mlp hidden layer size
-    device="cuda"           # use all the parallels
 )
+model = model.to("cuda")    # use all the parallels
+model.train()
 
 transforms = ...
 dataset = ...
@@ -39,6 +40,44 @@ for epoch in range(epochs):
         loss.backward()
         opt.step()
 
+# Save encoder weights for later
+torch.save(model.encoder.state_dict(), "pretrained.pt")
+```
+
+### Use pretrained weights in a classifier
+
+```python
+from simsiam.models import ResNet
+
+# just a wrapper around encoder + linear classifier networks
+model = ResNet(
+    backbone="resnet50",    # Same as during pretraining
+    num_classes=10,         # number of output neurons 
+    pretrained=False,       # Whether to load pretrained imagenet weights
+    freeze=True             # Freeze the encoder weights (or not)
+)
+
+# Load the pretrained weights from SimSiam
+model.encoder.load_state_dict(torch.load("pretrained.pt"))
+
+model = model.to("cuda")
+model.train()
+
+transforms = ...
+dataset = ...
+dataloader = ...
+opt = optim.SGD(model.parameters())
+loss_func = nn.CrossEntropyLoss()
+
+# Train on your small labeled train set
+for epoch in range(epochs):
+    for batch, (x, y) in enumerate(dataloader):
+        opt.zero_grad()
+        y_pred = model(x)
+        loss = loss_func(y_pred, y)
+        loss.backward()
+        opt.step()
+
 ```
 
 ### Install dependencies
@@ -53,7 +92,7 @@ pip install -r requirements.txt
 Modify pretrain.yaml to your liking and run
 
 ```python
-python pretrain.py
+python pretrain.py --cfg configs/pretrain.json
 
 ```
 

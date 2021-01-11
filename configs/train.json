@@ -1,10 +1,9 @@
 {
     "model": {
-        "name": "pretrained",
+        "name": "fine-tuned",
         "backbone": "resnet50",
-        "latent_dim": 2048,
-        "proj_hidden_dim": 2048,
-        "pred_hidden_dim": 512
+        "freeze": true,
+        "weights_path": "models/pretrained.pt"
     },
     "data": {
         "path": "data/",
@@ -15,11 +14,11 @@
         "num_classes": 10
     },
     "train": {
-        "epochs": 100,
+        "epochs": 90,
         "batch_size": 128,
-        "lr": 0.05,
+        "lr": 3E-4,
         "momentum": 0.9,
-        "weight_decay": 0.0001,
+        "weight_decay": 0.0,
         "log_interval": 100
     },
     "device": "cuda"
